@@ -1,0 +1,54 @@
+<span style="color:{{ block.settings.colour }}">
+  Estimated time of delivery between
+  <span id="estimate_time"></span>
+</span>
+
+{% schema %}
+{
+  "name": "Star Rating",
+  "target": "section",
+  "settings": [
+    { "type": "product", "id": "product", "label": "product", "autofill": true },
+    { "type": "color", "id": "colour", "label": "Star Colour", "default": "#fff" }
+  ]
+}
+{% endschema %}
+<script>
+  async function getAreas() {
+    const response = await fetch('http://localhost:3000/areas');
+    const data = await response.json();
+    return data;
+  }
+  async function getIP() {
+    const url = 'https://api.country.is';
+    const response = await fetch(url);
+    const data = await response.json();
+    return data;
+  }
+
+  function getFormattedDate(date) {
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+    }).format(date);
+  }
+  async function main() {
+    const areas = await getAreas();
+    const ip = await getIP();
+
+    const area = areas.find((area) => area.name === ip.country) ?? areas.find((area) => area.name === 'DEFAULT');
+
+    if (area) {
+      const [start, end] = area.estimated_time.split('-');
+      const estimateTime = new Date();
+      const estimatedStartDate = new Date(estimateTime.setDate(estimateTime.getDate() + parseInt(start)));
+      const estimatedEndDate = new Date(estimateTime.setDate(estimateTime.getDate() + parseInt(end)));
+      document.getElementById('estimate_time').textContent = `${getFormattedDate(
+        estimatedStartDate
+      )} and ${getFormattedDate(estimatedEndDate)}`;
+    }
+
+  main();
+  // get areas and then ip and then conpare
+</script>
